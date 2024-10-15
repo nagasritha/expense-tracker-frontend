@@ -1,12 +1,18 @@
 import React from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { useSelector,useDispatch } from 'react-redux';
-import { createExpense, fetchExpenses } from '../../Store/expenses.slice';
+import { useSelector, useDispatch } from 'react-redux';
+import { createExpense, fetchExpenses, updateExpense } from '../../Store/expenses.slice';
 import './forms.css';
 import { PageStatus } from '../../utils/pageStatus';
 
-const ManualExpenseInputForm = () => {
+interface ManualExpenseInputFormProps {
+  isUpdate?: boolean; // Prop to determine if the form is for updating
+  id?: string;
+}
+
+
+const ManualExpenseInputForm: React.FC<ManualExpenseInputFormProps> = ({ isUpdate,id }) => {
   // Define Yup validation schema
   const validationSchema = Yup.object({
     name: Yup.string().required('Name field is required'),
@@ -19,16 +25,20 @@ const ManualExpenseInputForm = () => {
   });
 
   let dispatch = useDispatch();
-  let data = useSelector((state:any)=>state.expenses);
+  let data = useSelector((state: any) => state.expenses);
   console.log(data);
   let pageStatusObject = new PageStatus();
-  let messageColor = data.page_status === pageStatusObject.success ? 'text-success':'text-danger';
-  
+  let messageColor = data.page_status === pageStatusObject.success ? 'text-success' : 'text-danger';
+
   const addExpenses = async (values: any) => {
     try {
       // Dispatch createExpense and wait for it to complete
-      const resultAction = await dispatch<any>(createExpense(values));
-  
+      let resultAction
+      if (!isUpdate) {
+        resultAction = await dispatch<any>(createExpense(values));
+      } else {
+        resultAction = await dispatch<any>(updateExpense({id,values}));
+      }
       // Check if the action was fulfilled (successful)
       if (createExpense.fulfilled.match(resultAction)) {
         // Fetch the updated list of expenses after successful addition
@@ -38,25 +48,26 @@ const ManualExpenseInputForm = () => {
       console.error("Error adding expense:", error);
     }
   };
-
+  let { expense } = useSelector((state: any) => state.expenses);
+  console.log(expense);
   // Use Formik for form handling
   const formik = useFormik({
     initialValues: {
-      name: '',
+      name: expense.name,
       // description: '',
-      category: '',
-      amount: '',
-      date: '',
+      category: expense.category,
+      amount: expense.amount,
+      date: expense.date,
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
       console.log(values);
       const formattedDate = values.date ? values.date.replace(/-/g, '/') : '';
       let customValues = {
-        name : values.name,
-        category : values.category,
-        amount : values.amount,
-        date : formattedDate
+        name: values.name,
+        category: values.category,
+        amount: values.amount,
+        date: formattedDate
       }
       addExpenses(customValues);
       // You can handle form submission here
@@ -79,7 +90,7 @@ const ManualExpenseInputForm = () => {
           value={formik.values.name}
         />
         {formik.errors.name && formik.touched.name ? (
-          <div className="text-danger">{formik.errors.name}</div>
+          <div className="text-danger">{typeof formik.errors.name === 'string' ? formik.errors.name : ''}</div>
         ) : null}
       </div>
 
@@ -126,7 +137,7 @@ const ManualExpenseInputForm = () => {
           {/* Add more options as needed */}
         </select>
         {formik.errors.category && formik.touched.category ? (
-          <div className="text-danger">{formik.errors.category}</div>
+          <div className="text-danger">{typeof formik.errors.category === 'string' ? formik.errors.category : ''}</div>
         ) : null}
       </div>
 
@@ -144,7 +155,7 @@ const ManualExpenseInputForm = () => {
           value={formik.values.amount}
         />
         {formik.errors.amount && formik.touched.amount ? (
-          <div className="text-danger">{formik.errors.amount}</div>
+          <div className="text-danger">{typeof formik.errors.amount === 'number' ? formik.errors.amount : ''}</div>
         ) : null}
       </div>
 
@@ -162,7 +173,7 @@ const ManualExpenseInputForm = () => {
           value={formik.values.date}
         />
         {formik.errors.date && formik.touched.date ? (
-          <div className="text-danger">{formik.errors.date}</div>
+          <div className="text-danger">{typeof formik.errors.date === 'string' ? formik.errors.date : ''}</div>
         ) : null}
       </div>
 

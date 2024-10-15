@@ -40,4 +40,63 @@ export class ExpensesService {
     }
   }
 
+  // Method to delete an expense
+  async deleteExpense(id: string): Promise<any> {
+    try {
+      const response = await axiosInstance.delete(`/expenses/${id}`);
+      console.log('Deleted Expense:', response.data);
+      return response.data; // Return successful response data
+    } catch (error: any) {
+      if (error.response) {
+        console.error('Server Error:', error.response.data.message);
+        return Promise.reject(error.response.data.message);
+      } else if (error.request) {
+        console.error('No response from server:', error.request);
+        return Promise.reject('No response from server');
+      } else {
+        console.error('Error:', error.message);
+        return Promise.reject(error.message);
+      }
+    }
+  }
+
+  // Method to update an expense
+  async updateExpense(id: string, updateDetails: ExpenseDetails): Promise<any> {
+    try {
+      const response = await axiosInstance.put(`/expenses/${id}`, updateDetails);
+      console.log('Updated Expense:', response.data);
+      return response.data; // Return successful response data
+    } catch (error: any) {
+      if (error.response) {
+        console.error('Server Error:', error.response.data.message);
+        return Promise.reject(error.response.data.message);
+      } else if (error.request) {
+        console.error('No response from server:', error.request);
+        return Promise.reject('No response from server');
+      } else {
+        console.error('Error:', error.message);
+        return Promise.reject(error.message);
+      }
+    }
+  }
+
+  // Method to get an expense by ID
+  async getExpenseById(id: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/expenses/${id}`);
+      console.log('Fetched Expense by ID:', response.data);
+      return response.data; // Return the successful response data
+    } catch (error: any) {
+      if (error.response) {
+        console.error('Server Error:', error.response.data.message);
+        return Promise.reject(error.response.data.message);
+      } else if (error.request) {
+        console.error('No response from server:', error.request);
+        return Promise.reject('No response from server');
+      } else {
+        console.error('Error:', error.message);
+        return Promise.reject(error.message);
+      }
+    }
+  }
 }
