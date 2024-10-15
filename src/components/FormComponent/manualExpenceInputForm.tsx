@@ -1,13 +1,16 @@
 import React from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { useSelector,useDispatch } from 'react-redux';
+import { createExpense, fetchExpenses } from '../../Store/expenses.slice';
 import './forms.css';
+import { PageStatus } from '../../utils/pageStatus';
 
 const ManualExpenseInputForm = () => {
   // Define Yup validation schema
   const validationSchema = Yup.object({
     name: Yup.string().required('Name field is required'),
-    description: Yup.string().required('Description field is required'),
+    // description: Yup.string().required('Description field is required'),
     category: Yup.string().required('Category is required'),
     amount: Yup.number()
       .required('Amount is required')
@@ -15,11 +18,32 @@ const ManualExpenseInputForm = () => {
     date: Yup.date().required('Date is required'),
   });
 
+  let dispatch = useDispatch();
+  let data = useSelector((state:any)=>state.expenses);
+  console.log(data);
+  let pageStatusObject = new PageStatus();
+  let messageColor = data.page_status === pageStatusObject.success ? 'text-success':'text-danger';
+  
+  const addExpenses = async (values: any) => {
+    try {
+      // Dispatch createExpense and wait for it to complete
+      const resultAction = await dispatch<any>(createExpense(values));
+  
+      // Check if the action was fulfilled (successful)
+      if (createExpense.fulfilled.match(resultAction)) {
+        // Fetch the updated list of expenses after successful addition
+        await dispatch<any>(fetchExpenses());
+      }
+    } catch (error) {
+      console.error("Error adding expense:", error);
+    }
+  };
+
   // Use Formik for form handling
   const formik = useFormik({
     initialValues: {
       name: '',
-      description: '',
+      // description: '',
       category: '',
       amount: '',
       date: '',
@@ -27,6 +51,14 @@ const ManualExpenseInputForm = () => {
     validationSchema: validationSchema,
     onSubmit: (values) => {
       console.log(values);
+      const formattedDate = values.date ? values.date.replace(/-/g, '/') : '';
+      let customValues = {
+        name : values.name,
+        category : values.category,
+        amount : values.amount,
+        date : formattedDate
+      }
+      addExpenses(customValues);
       // You can handle form submission here
     },
   });
@@ -51,7 +83,7 @@ const ManualExpenseInputForm = () => {
         ) : null}
       </div>
 
-      {/* Description Field */}
+      {/* Description Field
       <div>
         <label htmlFor="description" className="label">
           Description
@@ -67,7 +99,7 @@ const ManualExpenseInputForm = () => {
         {formik.errors.description && formik.touched.description ? (
           <div className="text-danger">{formik.errors.description}</div>
         ) : null}
-      </div>
+      </div> */}
 
       {/* Category Field */}
       <div>
@@ -142,6 +174,7 @@ const ManualExpenseInputForm = () => {
       >
         Submit
       </button>
+      <p className={messageColor}>{data.message}</p>
     </form>
   );
 };

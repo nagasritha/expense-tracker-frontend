@@ -1,6 +1,8 @@
 import { useFormik } from 'formik';
+import { useSelector,useDispatch } from 'react-redux';
 import * as Yup from 'yup';
 import './forms.css'
+import { createExpense } from '../../Store/expenses.slice';
 
 const FileExpenceInputForm = () => {
   // Define Yup validation schema
@@ -13,15 +15,22 @@ const FileExpenceInputForm = () => {
       }),
   });
 
+  let dispatch = useDispatch();
+  let {message,error} = useSelector((state:any)=>state.expenses);
+  console.log(message,error);
+
+  const addExpenses = (values:any) =>{
+    console.log(values);
+    dispatch<any>(createExpense(values));
+  }
+
   // Use Formik for form handling
   const formik = useFormik({
     initialValues: {
       file: null,
     },
     validationSchema: validationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit:(values)=>addExpenses(values)
   });
 
   return (
